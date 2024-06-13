@@ -3102,12 +3102,6 @@
             <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5078</Reference>
         </References>
     </UAMethod>
-    <UAVariable DataType="String" NodeId="ns=5;i=6282" BrowseName="4:Type" ParentNodeId="ns=5;i=5083" UserAccessLevel="3" AccessLevel="3">
-        <DisplayName>Type</DisplayName>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
-        </References>
-    </UAVariable>
     <UAVariable DataType="EUInformation" NodeId="ns=5;i=6284" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6216">
         <DisplayName>EngineeringUnits</DisplayName>
         <References>

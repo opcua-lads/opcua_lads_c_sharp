@@ -2,11 +2,15 @@
 using Opc.Ua;
 using Opc.Ua.Export;
 using System.Reflection;
+using Opc.Ua.LADS;
+using ObjectIds = Opc.Ua.ObjectIds;
 
 namespace OpcUa.Lads.Foundation.Server
 {
     public sealed class NodeManager : CustomNodeManager2
     {
+        private Controller _controller;
+
         public NodeManager(IServerInternal server, ApplicationConfiguration configuration,
             params string[] namespaceUris) : base(server, configuration, namespaceUris)
         {
@@ -44,7 +48,32 @@ namespace OpcUa.Lads.Foundation.Server
                         parent.AddChild((BaseInstanceState)node.Value);
                     }
                 }
+
+                var passiveTemp = (BaseObjectState)PredefinedNodes.First(n =>
+                    (uint)n.Key.Identifier == Spectaris.LuminescenceReader.Objects
+                        .LuminescenceReaderDevice_FunctionalUnitSet_LuminescenceReaderUnit_FunctionSet_TemperatureController &&
+                    n.Value.DisplayName == "Temperature Controller").Value;
+                var activeTemp = new AnalogControlFunctionTypeState(passiveTemp.Parent);
+                UpdateInstance(passiveTemp, activeTemp);
+
+                var passiveSensor = (BaseObjectState)PredefinedNodes.First(n =>
+                    (uint)n.Key.Identifier == Spectaris.LuminescenceReader.Objects
+                        .LuminescenceReaderDevice_FunctionalUnitSet_LuminescenceReaderUnit_FunctionSet_LuminescenceSensor &&
+                    n.Value.DisplayName == "Luminescence Sensor").Value;
+                var activeSensor = new AnalogArraySensorFunctionTypeState(passiveSensor.Parent);
+                UpdateInstance(passiveSensor, activeSensor);
+
+                _controller = new Controller(SystemContext);
+                _controller.Init(activeTemp, activeSensor);
+                _controller.Start();
             }
+        }
+
+        private void UpdateInstance(BaseObjectState passive, BaseObjectState active)
+        {
+            active.Create(SystemContext, passive);
+            passive.Parent?.ReplaceChild(SystemContext, active);
+            AddPredefinedNode(SystemContext, active);
         }
 
         private void ImportXml(IDictionary<NodeId, IList<IReference>> externalReferences, string resourcePath)
@@ -82,6 +111,12 @@ namespace OpcUa.Lads.Foundation.Server
 
             // Ensure the reverse references exist.
             AddReverseReferences(externalReferences);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _controller.Stop();
+            base.Dispose(disposing);
         }
     }
 }
