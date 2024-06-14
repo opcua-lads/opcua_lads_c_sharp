@@ -55,7 +55,6 @@ namespace OpcUa.Lads.Foundation.Server
             _sensor = sensor;
 
             // Initialize some values
-            _tempController.CurrentValue.Historizing = true;
             WriteValue(_tempController.IsEnabled, false);
             WriteValue(_tempController.TargetValue, 37.0);
 
